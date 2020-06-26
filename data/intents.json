@@ -1,0 +1,58 @@
+{"intents": [
+        {"tag": "greeting",
+         "patterns": ["Hi there", "How are you", "Is anyone there?","Hey","Hey there", "Hello", "Good day", "Hola"],
+         "responses": ["Hello, thanks for asking", "Good to see you again", "Hi there, How can I help?"],
+         "context": [""]
+        },
+        {"tag": "goodbye",
+         "patterns": ["Bye", "See you later", "Goodbye", "Nice chatting to you, bye", "Till next time"],
+         "responses": ["See you!", "Have a nice day", "Bye! Come back again soon."],
+         "context": [""]
+        },
+        {"tag": "thanks",
+         "patterns": ["Thanks", "Thank you", "That's helpful", "Awesome, thanks", "Thanks for helping me"],
+         "responses": ["Happy to help!", "Any time!", "My pleasure"],
+         "context": [""]
+        },
+        {"tag": "noanswer",
+         "patterns": [],
+         "responses": ["Sorry, can't understand you", "Please give me more info", "Not sure I understand"],
+         "context": [""]
+        },
+        {"tag": "options",
+         "patterns": ["How you could help me?", "What you can do?", "What help you provide?", "How you can be helpful?", "What support is offered"],
+         "responses": ["I can guide you through a travel booking.", "Offering support for booking trips, whether you are travelling for pleasure or work, by train or plane."],
+         "context": [""]
+        },
+        {"tag": "travel_plans",
+         "patterns": ["I'd like to book a trip", "I want to travel somewhere", "I want to travel", "I'd like to book a plane trip", "Can you book me a trip?"],
+         "responses": ["Where would you like to go?", ""],
+         "context": ["search_places"]
+        },
+        {"tag": "budget",
+         "patterns": ["I have a budget of", "I have a budget", "I can only spend", "money", "I only have" ],
+         "responses": ["Okay, I'll see what I can find."],
+         "context": ["search_prices"]
+        },
+        {"tag": "date",
+         "patterns": ["I want to travel on", "date", "this time", "time" ],
+         "responses": ["Please proviide both from and to dates", "When would you like to return?"],
+         "context": ["search_dates"]
+        },
+        {"tag": "search_places",
+         "patterns": [],
+         "responses": ["Loading travel destination..."],
+         "context": [""]
+        },
+        {"tag": "search_dates",
+         "patterns": [],
+         "responses": ["Loading available dates..."],
+         "context": [""]
+        },
+        {"tag": "search_prices",
+         "patterns": [],
+         "responses": ["Loading prices"],
+         "context": [""]
+        }
+   ]
+}
