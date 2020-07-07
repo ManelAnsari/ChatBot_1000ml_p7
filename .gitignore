@@ -2,3 +2,4 @@
 cb_env/
 .env
 practice_scripts/
+db.sqlite3
