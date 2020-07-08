@@ -5,6 +5,9 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 
+# Import chatbot file
+#from traveler import *
+
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_SERVER')
@@ -35,9 +38,10 @@ async def on_member_join(member):
         f'Nice to meet you, {member.name}, I am the Traveler! What can I do for you today?',
         f'Well hello there, {member.name}! What can I help you with?'
     ]
-    channel = client.get_channel(730084289382973440)
+
     response = random.choice(join_messages)
-    await channel.send(response)
+    await member.create_dm()
+    await member.dm_channel.send(response)
 
 @bot.command(name='create-channel')
 @commands.has_role('admin')
@@ -58,18 +62,17 @@ async def on_message(message):
     if message.author == client.user:
         # This is so that the bot never responds to its own message
         return
-    brooklyn_99_quotes = [
-        'I\'m the human form of the 💯 emoji.',
-        'Bingpot!',
-        (
-            'Cool. Cool cool cool cool cool cool cool, '
-            'no doubt no doubt no doubt no doubt'
-        ),
+    # These statements will redirect
+    redirect_statements = [
+        'Let\'s chat in private, I may need to ask for your personal information!',
+        'Can I talk to you over here? I\'ll probably need some personal information!',
+        f'Hey {message.author.name} let\'s use direct messaging for privacy.'
     ]
 
-    if '99!' in message.content.lower():
-        response = random.choice(brooklyn_99_quotes)
-        await message.channel.send(response)
+    if ((client.user.mentioned_in(message)) and (str(message.channel) =='travel-booking')):
+        response = random.choice(redirect_statements)
+        await message.author.create_dm()
+        await message.author.dm_channel.send(response)
     elif message.content == 'raise-exception':
         raise discord.DiscordException
 
