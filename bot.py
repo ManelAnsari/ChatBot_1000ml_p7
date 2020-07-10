@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from discord.ext import commands
 
 # Import chatbot file
-#from traveler import *
+from traveler import Traveler
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -57,6 +57,13 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CheckFailure):
         await ctx.send('You do not have the correct role for this command')
 
+flight_info = {'depart_date':0,
+               'return_date':0,
+               'origin_loc':0,
+               'dest_loc':0,
+               'budget':0
+              }
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -75,6 +82,10 @@ async def on_message(message):
         await message.author.dm_channel.send(response)
     elif message.content == 'raise-exception':
         raise discord.DiscordException
+
+    if (str(message.channel) != 'travel-booking'):
+        await message.channel.send(Traveler(str(message)))
+
 
 @client.event
 async def on_error(event, *args, **kwargs):

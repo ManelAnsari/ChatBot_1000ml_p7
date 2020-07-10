@@ -4,3 +4,4 @@ cb_env/
 practice_scripts/
 db.sqlite3
 err.log
+__pycache__/
