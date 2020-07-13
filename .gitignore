@@ -5,3 +5,6 @@ practice_scripts/
 db.sqlite3
 err.log
 __pycache__/
+.~lock.Airports.csv#
+db.sqlite3-shm
+db.sqlite3-wal

@@ -1,5 +1,7 @@
 path='data/'
-#import colab_env
+
+import discord
+from discord.ext import commands
 import os
 import datetime
 from dotenv import load_dotenv
@@ -57,6 +59,41 @@ from spacy.matcher import Matcher
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
 from chatterbot.trainers import ChatterBotCorpusTrainer
+
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_SERVER')
+
+# Setting up the discord api client.
+client = discord.Client()
+bot = commands.Bot(command_prefix = '!')
+
+@client.event
+# This is the function that discord calls when it starts.
+async def on_ready():
+    guild = discord.utils.get(client.guilds, name = GUILD)
+    
+    # as this connects, it prints out what guild/server it is connected to
+    print(
+        f'{client.user} is connected to the following guild:\n'
+        f'{guild.name}(id:{guild.id})')
+
+    # now print out a string of the members on the server/guild
+    members = '\n - '.join([member.name for member in guild.members])
+    print(f'Guild Members:\n - {members}')
+
+@client.event
+async def on_member_join(member):
+    # these functions wait until all other members of the coroutine are finished exucuting.
+    join_messages = [
+        f'Hey {member.name}, welcome to the Traveler\'s Guild, how can I help you?',
+        f'Nice to meet you, {member.name}, I am the Traveler! What can I do for you today?',
+        f'Well hello there, {member.name}! What can I help you with?'
+    ]
+
+    response = random.choice(join_messages)
+    await member.create_dm()
+    await member.dm_channel.send(response)
 
 # Greetings
 hellos = [['Hello!','Hi there'],
@@ -216,7 +253,7 @@ def entity_picker(message):
     '''
     
     matches = entity_looker(message)
-    from_date = to_date = origin = dest = budget_int = ''
+    from_date = to_date = origin = dest = budget_int = 0
     
     # From Date match
     if matches[0]:
@@ -461,13 +498,6 @@ flight_info = {'depart_date':0,
                'budget':0
               }
 
-flight_info = {'depart_date':0,
-               'return_date':0,
-               'origin_loc':0,
-               'dest_loc':0,
-               'budget':0
-              }
-
 def Traveler(message):  # sourcery skip: inline-immediately-returned-variable
     # First, if the message contains a confirmation, we should continue with the API booking
     if ('confirmed' in message) or ('Confirmed' in message):
@@ -475,19 +505,19 @@ def Traveler(message):  # sourcery skip: inline-immediately-returned-variable
     # See what matches we have:
     values = entity_picker(message)
     
-    if values[0] != '':
+    if values[0] != 0:
         flight_info['depart_date'] = values[0]
         
-    if values[1] != '':
+    if values[1] != 0:
         flight_info['return_date'] = values[1]
         
-    if values[2] != '':
+    if values[2] != 0:
         flight_info['origin_loc'] = values[2]
         
-    if values[3] != '':
+    if values[3] != 0:
         flight_info['dest_loc'] = values[3]
         
-    if values[4] != '':
+    if values[4] != 0:
         flight_info['budget'] = values[4]
     
     constraint_bool = [vals!=0 for vals in flight_info.values()]
@@ -525,3 +555,28 @@ def Traveler(message):  # sourcery skip: inline-immediately-returned-variable
     
     else:
         return chatbot.get_response(message)
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        # This is so that the bot never responds to its own message
+        return
+    # These statements will redirect
+    redirect_statements = [
+        'Let\'s chat in private, I may need to ask for your personal information!',
+        'Can I talk to you over here? I\'ll probably need some personal information!',
+        f'Hey {message.author.name} let\'s use direct messaging for privacy.'
+    ]
+
+    if ((client.user.mentioned_in(message)) and (str(message.channel) =='travel-booking')):
+        response = random.choice(redirect_statements)
+        await message.author.create_dm()
+        await message.author.dm_channel.send(response)
+
+    if (str(message.channel) != 'travel-booking'):
+        bot_response = Traveler(str(message.content))
+        print(str(message.content))
+        print(bot_response)
+        await message.channel.send(bot_response)
+
+client.run(TOKEN)
