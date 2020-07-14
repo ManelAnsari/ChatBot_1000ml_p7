@@ -3,7 +3,7 @@ path='data/'
 import discord
 from discord.ext import commands
 import os
-import datetime
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv(dotenv_path='')
 # The API
@@ -168,7 +168,7 @@ travel_corpustrainer = ChatterBotCorpusTrainer(chatbot)
 
 travel_corpustrainer.train("chatterbot.corpus.english")
 
-def date_from_matcher(tokenized):
+def depart_date_matcher(tokenized):
     matcher = Matcher(nlp.vocab)
     matcher.add("DateFromFinder", None, [{'LOWER':'leave'}, {'LOWER':'on'}, {"ENT_TYPE": "DATE"}],
                                         [{'LOWER':'leaving'}, {'LOWER':'on'}, {"ENT_TYPE": "DATE"}],
@@ -180,13 +180,16 @@ def date_from_matcher(tokenized):
     return matcher(tokenized)
 
     
-def date_to_matcher(tokenized):
+def return_date_matcher(tokenized):
     matcher = Matcher(nlp.vocab)
     matcher.add("DateToFinder", None, [{'LOWER':'return'},{'LOWER':'on'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'returning'},{'LOWER':'on'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'return'},{"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'returning'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'back'},{'LOWER':'on'}, {"ENT_TYPE": "DATE"}],
+                                      [{'LOWER':'back'}, {"ENT_TYPE": "DATE"}],
+                                      [{'LOWER':'for'}, {"ENT_TYPE": "DATE"}],
+                                      [{'LOWER':'until'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'to'}, {"ENT_TYPE": "DATE"}])
     return matcher(tokenized)
    
@@ -228,10 +231,10 @@ def entity_looker(message):
     tokens = nlp(message)
     # This portion uses the boolean nature of an empty list. If the list is empty, we get False, else True
     # Date From Match
-    DF_match = not not date_from_matcher(tokens)
+    DF_match = not not depart_date_matcher(tokens)
     
     # Date To Match
-    DT_match = not not date_to_matcher(tokens)
+    DT_match = not not return_date_matcher(tokens)
     
     # Origin Match
     O_match = not not origin_matcher(tokens)
@@ -253,21 +256,21 @@ def entity_picker(message):
     '''
     
     matches = entity_looker(message)
-    from_date = to_date = origin = dest = budget_int = 0
+    depart_date = return_date = origin = dest = budget_int = ''
     
     # From Date match
     if matches[0]:
         # Get the from date (comes back as DateTime)
-        from_date_dt = get_from_dates(message)
+        depart_date_dt = get_depart_date(message)
         # Convert dates for API
-        from_date = convert_date(from_date_dt)
+        depart_date = convert_date(depart_date_dt)
     
     # To Date match
     if matches[1]:
         # Get the from date (comes back as DateTime)
-        to_date_dt = get_to_dates(message)
+        return_date_dt = get_return_date(message)
         # Convert dates for API
-        to_date = convert_date(to_date_dt)
+        return_date = convert_date(return_date_dt)
         
     # Origin Location match
     if matches[2]:
@@ -286,9 +289,9 @@ def entity_picker(message):
         # convert to int
         budget_int = int(budget)
     
-    return (from_date, to_date, origin, dest, budget_int)
+    return (depart_date, return_date, origin, dest, budget_int)
 
-def get_from_dates(message):
+def get_depart_date(message):
     '''
     This function is designed to extract a datetime object from the departure date, called "from_date". 
     If there are two dates in the message, I will _assume_ that the first date is the departure date, and the
@@ -297,35 +300,18 @@ def get_from_dates(message):
     # Tokenize
     tokens = nlp(message)
     # Extract entities
-    entities = [(X.label_, X.text) for X in tokens.ents]
-    # get rid of anything not a date
-    dates = [x for x in entities if x[0]=='DATE']
+    match = depart_date_matcher(tokens)
+    desired_date = str(tokens[match[0][1]:match[0][2]+1])
 
     # Next, we will look to see if someone used the words "tomorrow", "next week" or "today"
-    text = [x[1].lower() for x in dates]
-    today = datetime.datetime.today()
+    today = datetime.today()
     
-    if len(dates)>1:
-        try: 
-            # we check if these words are in the message, and if so, do dates accordingly
-            if any(day in text for day in ['today','tomorrow','next week']):
-                from_date = word_dates(text[0], today)
-            else: 
-                from_date = dparser.parse(dates[0][1],fuzzy=True)
-        except:
-            # Need a thing here to communicate with discord, that states this is not a date type that is known
-            return None
-    elif len(dates)==1:
-        try:
-            if any(day in text for day in ['today','tomorrow','next week']):
-                from_date = word_dates(text[0], today)
-            else:
-                from_date = dparser.parse(dates[0][1],fuzzy=True)
-        except:
-            # Communicate with discord again
-            return None
+    if any(day in desired_date for day in ['today','tomorrow','next week']):
+        depart_date = word_dates(desired_date, today)
+    else: 
+        depart_date = dparser.parse(desired_date,fuzzy=True)
         
-    return from_date
+    return depart_date
 
 def word_dates(date_text, today):
     if 'today' in date_text:
@@ -347,7 +333,16 @@ def convert_date(dtime):
     DD = str(dtime.day) if int(dtime.day)>9 else '0'+str(dtime.day)
     return f"{YYYY}-{MM}-{DD}"
 
-def get_to_dates(message):
+def revert_date(dateStr):
+    '''
+    This function takes in a datestring of the form 'YYYY-mm-dd' and converts it to datetime
+    '''
+    YYYY = int(dateStr[0:4])
+    mm = int(dateStr[5:7])
+    dd = int(dateStr[8:10])
+    return datetime(YYYY,mm,dd)
+
+def get_return_date(message):
     '''
     This function is designed to extract a datetime object from the Return date, called "to_date". 
     If there are two dates in the message, I will _assume_ that the first date is the departure date, and the
@@ -356,35 +351,18 @@ def get_to_dates(message):
     # Tokenize
     tokens = nlp(message)
     # Extract entities
-    entities = [(X.label_, X.text) for X in tokens.ents]
-    # get rid of anything not a date
-    dates = [x for x in entities if x[0]=='DATE']
-    
+    match = return_date_matcher(tokens)
+    desired_date = str(tokens[match[0][1]:match[0][2]+1])
+
     # Next, we will look to see if someone used the words "tomorrow", "next week" or "today"
-    text = [x[1].lower() for x in dates]
-    today = datetime.datetime.today()
+    today = datetime.today()
     
-    if len(dates)>1:
-        try: 
-            # we check if these words are in the message, and if so, do dates accordingly
-            if any(day in text for day in ['today','tomorrow','next week']):
-                to_date = word_dates(text[1], today)
-            else: 
-                to_date = dparser.parse(dates[1][1], fuzzy=True)
-        except:
-            # Need a thing here to communicate with discord, that states this is not a date type that is known
-            return None
-    elif len(dates)==1:
-        try:
-            if any(day in text for day in ['today','tomorrow','next week']):
-                to_date = word_dates(text[0], today)
-            else:
-                to_date = dparser.parse(dates[0][1],fuzzy=True)
-        except:
-            # Communicate with discord again
-            return None
+    if any(day in desired_date for day in ['today','tomorrow','next week']):
+        return_date = word_dates(desired_date, today)
+    else: 
+        return_date = dparser.parse(desired_date,fuzzy=True)
         
-    return to_date
+    return return_date
 
 def get_origin(message):
     
@@ -431,15 +409,16 @@ def get_dest(message):
     return dest
 
 def get_budget(message):
-    tokens = nlp(message)
-    budget = budget_matcher(tokens)
-    match = budget_matcher(nlp(message))
+    no_punct = re.sub(r'[^\w\s$]','',message)
+    tokens = nlp(no_punct)
+    match = budget_matcher(tokens)
     try:
-        budget = nlp(message)[match[0][2]-1]
+        # Near the position of the first match, scan for numbers. The first number present is the budget.
+        budget_ls = re.findall(r'[\d\.\d]+', str(tokens[match[0][1]:]))
+        budget = budget_ls[0]
     except IndexError:
-        budget = None
-
-    return int(str(budget))
+        budget = 0
+    return budget
 
 # Read in IATA code csv
 city_code = pd.read_csv('Airports.csv')
@@ -460,9 +439,9 @@ def iata_code_lookup(city, codes, origin_city=True):
     except KeyError:
         iata_code = ''
         if origin_city:
-            print(f'Unfortunately there are no flights leaving {city} at this time.')
+            print(f'Unfortunately there are no flights leaving {city.upper()} at this time.')
         else:
-            print(f'Unfortunately there are no flights to {city} at this time.')
+            print(f'Unfortunately there are no flights to {city.upper()} at this time.')
         return None
     return iata_code
 
@@ -481,14 +460,15 @@ def get_flight(flight_info, codes):
             maxPrice = flight_info['budget'],
             currencyCode='CAD',
             adults=1)
-        result = f'''Your flight has been booked! Here are the details, tickets will be sent to you by email.
+        result = f'''
+        Your flight has been booked! Here are the details, tickets will be sent to you by email.
         Departure Time: {response.data[0]['itineraries'][0]['segments'][0]['departure']['at']}
         Arrival Time: {response.data[0]['itineraries'][0]['segments'][0]['arrival']['at']}
         Total Price: {response.data[0]['price']['total']}
         Flight Class: {response.data[0]['travelerPricings'][0]['fareDetailsBySegment'][0]['cabin']}
         '''
-    except ResponseError as error:
-        result = error
+    except ResponseError:
+        result = 'It seems there was an error in your booking, would you like to try something else?'
     return result
 
 flight_info = {'depart_date':0,
@@ -497,62 +477,98 @@ flight_info = {'depart_date':0,
                'dest_loc':0,
                'budget':0
               }
+context = ''
+pleasantries = ['hey','hi','hello','hola','greetings','bye','goodbye','see ya','later','see you','peace']
 
-def Traveler(message):  # sourcery skip: inline-immediately-returned-variable
+def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, merge-nested-ifs
+    global context
+    global pleasantries
     # First, if the message contains a confirmation, we should continue with the API booking
     if ('confirmed' in message) or ('Confirmed' in message):
         return get_flight(flight_info, code_dict)
+
+    # The following is a way to handle single word/entity answers
+    elif len(nlp(message)) <= 3:
+        if context in ['dest', 'return']:
+            message = 'to ' + message
+            context = '' # Reset context 
+        elif context in ['orig', 'depart']:
+            message = 'from ' + message
+            context = ''
+        elif context == 'budget':
+            message = 'under' + message
+            context = ''
+        elif all(pls not in message.lower() for pls in pleasantries):
+            return 'Sorry, but I have a tough time understanding short sentences like that, could you please provide a little more detail?'
+
     # See what matches we have:
     values = entity_picker(message)
-    
-    if values[0] != 0:
+
+    if values[0] != '':
         flight_info['depart_date'] = values[0]
-        
-    if values[1] != 0:
+
+    if values[1] != '':
         flight_info['return_date'] = values[1]
-        
-    if values[2] != 0:
+
+    if values[2] != '':
         flight_info['origin_loc'] = values[2]
-        
-    if values[3] != 0:
+
+    if values[3] != '':
         flight_info['dest_loc'] = values[3]
-        
-    if values[4] != 0:
+
+    if values[4] != '':
         flight_info['budget'] = values[4]
-    
+
+    if (flight_info['depart_date'] != 0) and (flight_info['return_date'] != 0):
+        if (revert_date(flight_info['return_date'])) < (revert_date(flight_info['depart_date'])):
+            temp = flight_info['depart_date']
+            flight_info['depart_date'] = flight_info['return_date']
+            flight_info['return_date'] = temp
+            return "It seems you are attempting to travel back in time! Unfortunately we can't offer such a trip, so I've flipped the order of the dates for you!"
+
     constraint_bool = [vals!=0 for vals in flight_info.values()]
     if (any(constraint_bool)) and not (all(constraint_bool)):
         if flight_info['dest_loc'] == 0:
             response_list_dest_loc = ['Where did you want to go?', 
                                       'Where were you thinking of travelling to?', 
                                       'What is your desired destination?']
+            context = 'dest' # Need a way to handle single word answers.
             return random.choice(response_list_dest_loc)
         if flight_info['origin_loc'] == 0: 
             response_list_origin_loc = ['Where are you leaving from?', 
                                         'What city are you flying out of?', 
                                         'Where will you be flying from?']
+            context = 'orig'
             return random.choice(response_list_origin_loc)
         if flight_info['depart_date'] == 0:
             response_list_depart_date = ['When did you want to leave?', 
                                          'What dates were you thinking?', 
                                          'When is your travel date?', 
                                          'For what days should I book the flight?']
+            context = 'depart'
             return random.choice(response_list_depart_date)
         if flight_info['return_date'] == 0:
             response_list_return_date = ['When did you want to come back?', 
                                          'When do you need to return?', 
                                          'What should I set for return date?']
+            context = 'return'
             return random.choice(response_list_return_date)
         if flight_info['budget'] == 0:
             response_list_budget = ['How much are you willing to spend on this trip?', 
                                     "What's your budget for this trip?", 
                                     "Do you have a price limit for the trip?"]
+            context = 'budget'
             return random.choice(response_list_budget)
-    
+
     elif all(constraint_bool):
-        finalize= f"Awesome! Looks like I have everything I need to book your flight! Let me just confirm with you. You are booking a flight to {flight_info['dest_loc'].upper()}, and you are flying from {flight_info['origin_loc'].upper()}. You will be leaving on {flight_info['depart_date']} and returning on {flight_info['return_date']}. Finally, your budget is ${flight_info['budget']}. Is all this information correct? If yes, please type 'Confirmed'. If this is not correct, please provide the correct info in detail."
+        finalize= f'''Awesome! Looks like I have everything I need to book your flight! Let me just confirm with you. 
+        You are booking a flight to {str(flight_info['dest_loc']).upper()}, and you are flying from {str(flight_info['origin_loc']).upper()}. 
+        You will be leaving on {flight_info['depart_date']} and returning on {flight_info['return_date']}. 
+        Finally, your budget is ${flight_info['budget']}. 
+        Is all this information correct? If yes, please type 'Confirmed'. If this is not correct, please provide the correct info in detail.
+        '''
         return finalize
-    
+
     else:
         return chatbot.get_response(message)
 
@@ -562,21 +578,30 @@ async def on_message(message):
         # This is so that the bot never responds to its own message
         return
     # These statements will redirect
-    redirect_statements = [
-        'Let\'s chat in private, I may need to ask for your personal information!',
-        'Can I talk to you over here? I\'ll probably need some personal information!',
-        f'Hey {message.author.name} let\'s use direct messaging for privacy.'
-    ]
-
+    redirect_statement = f'''Hey {message.author.name}, I'm the Traveler. I'd love to help you book a flight! Please use detailed sentences to answer my questions,
+        If at any point you need to reset the information you have given me, simply type "Clear!" and we can restart. Let's use direct messaging 
+        for privacy.'''
+    # Need a way for the user to clear the info they have already input, in case of a mistake    
+    
     if ((client.user.mentioned_in(message)) and (str(message.channel) =='travel-booking')):
-        response = random.choice(redirect_statements)
         await message.author.create_dm()
-        await message.author.dm_channel.send(response)
+        await message.author.dm_channel.send(redirect_statement)
 
-    if (str(message.channel) != 'travel-booking'):
-        bot_response = Traveler(str(message.content))
-        print(str(message.content))
-        print(bot_response)
-        await message.channel.send(bot_response)
+    elif (str(message.channel) != 'travel-booking'):
+        if 'clear!' in str(message.content.lower()):
+            global flight_info
+            flight_info = {'depart_date':0,
+                           'return_date':0,
+                           'origin_loc':0,
+                           'dest_loc':0,
+                           'budget':0
+                           }
+            await message.channel.send("Information has been cleared! Let's start again! Where would you like to go?")
+        else:
+            bot_response = Traveler(str(message.content))
+            print(str(message.content))
+            print(bot_response)
+            await message.channel.send(bot_response)
+
 
 client.run(TOKEN)
