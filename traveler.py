@@ -113,42 +113,35 @@ byes = [['Bye','Goodbye!'],
         ['Goodbye!', 'Bye for now!']
        ]
 
-convo1=["I would like to book a flight.",
-        "I can help you with that. Where are you traveling to?",
-        "I am traveling to Singapore.",
-        "What date will you be traveling?",
-        "I want to fly on June 14th.",
-        "When would you like to return?"]
-
-convo2=['I want to buy a plane ticket.',
-        'I can help you make your reservation. What is your destination?',
-        'My final destination is Sydney, Australia.',
-        'What is your travel date?',
-        'I am making a reservation for December 12th.',
-        'Fantastic, when will you need to come back?']
-
-convo3=['I need to make a plane reservation.',
-        'We can book your trip right now. What city are you flying to?',
-        'I need to fly to New York City.',
-        'What date would you like me to book this plane ticket(s) for?',
-        'I need a flight on July 4th.',
-        "Awesome, when do you think you'd like to return?"]
-
-convo4=['I want to take a vacation',
-        'We can help you with that! What were you thinking?',
-        'I was thinking Dominica.',
-        'When would you like to leave?',
-        'I need a flight on March 3rd.',
-        "Let's get booking then! I'll need your return date."]
-convo5=['I need a goddamn vacation',
-        'Where do you come from, where do you go? Where are you coming from, Cotton Eyed Joe?',
-        "That was random, but I think I'll check out London",
-        "Radical, let's get to booking! When did you want to leave?",
-        "Probably this week, June 29th, 2020",
-        "Excellent, I only have a few more questions for you."
-        ]
-
-convos = [convo1,convo2,convo3, convo4, convo5]
+convos = [
+          ["I would like to book a flight.",
+           "I can help you with that. Where were you thinking of traveling to?"
+          ],
+          ['I want to buy a plane ticket.',
+           'I can help you make your reservation! Can you provide some more details?'
+          ],
+          ['I need to make a plane reservation.',
+           'I can book your trip right now. What city are you flying to, from?'
+          ],
+          ['I want to take a vacation',
+           'I can help you with that! What were you thinking?'
+          ],
+          ['I need a goddamn vacation',
+           'Where do you come from, where do you go? Where are you coming from, Cotton Eyed Joe?'
+          ],
+          ['I want to book a flight',
+           'For sure! Can give me some details, like where you want to go and when?'
+          ],
+          ['Book me a flight',
+           "Definitely! What sort of trip were you thinking of?"
+          ],
+          ["Can I book a plane ticket?",
+           "Absolutely! Can you provide some more details for your trip?"
+          ],
+          ["I would like to book a trip",
+           "Awesome, what sort of trip were you thinking?"              
+          ]
+         ]
 
 # We will first train the bot with the lists of data we've given it above.
 chatbot = ChatBot('Traveler',logic_adapters=["chatterbot.logic.BestMatch"])
@@ -418,6 +411,7 @@ def get_budget(message):
         budget = budget_ls[0]
     except IndexError:
         budget = 0
+
     return budget
 
 # Read in IATA code csv
@@ -450,7 +444,7 @@ def get_flight(flight_info, codes):
         client_id=os.getenv("AMADEUS_API_KEY"),
         client_secret=os.getenv("AMADEUS_SECRET")
     )
-
+    result = ''
     try:
         response = amadeus.shopping.flight_offers_search.get(
             originLocationCode = iata_code_lookup(flight_info['origin_loc'], codes, origin_city=True),
@@ -460,13 +454,22 @@ def get_flight(flight_info, codes):
             maxPrice = flight_info['budget'],
             currencyCode='CAD',
             adults=1)
-        result = f'''
-        Your flight has been booked! Here are the details, tickets will be sent to you by email.
-        Departure Time: {response.data[0]['itineraries'][0]['segments'][0]['departure']['at']}
-        Arrival Time: {response.data[0]['itineraries'][0]['segments'][0]['arrival']['at']}
-        Total Price: {response.data[0]['price']['total']}
-        Flight Class: {response.data[0]['travelerPricings'][0]['fareDetailsBySegment'][0]['cabin']}
-        '''
+        for i, offer in enumerate(response.data[:5]):
+            to_dep = dparser.parse(offer['itineraries'][0]['segments'][0]['departure']['at'],fuzzy=True)
+            to_arr = dparser.parse(offer['itineraries'][0]['segments'][0]['arrival']['at'],fuzzy=True)
+            re_dep = dparser.parse(offer['itineraries'][1]['segments'][0]['departure']['at'],fuzzy=True)
+            re_arr = dparser.parse(offer['itineraries'][1]['segments'][0]['arrival']['at'],fuzzy=True)
+            result += f'''
+Option ✈️ {i+1}
+Departure Time:        {to_dep.hour}:{to_dep.minute if to_dep.minute>9 else str(0)+str(to_dep.minute)} on {to_dep.year}-{to_dep.month}-{to_dep.day}
+Arrival Time:          {to_arr.hour}:{to_arr.minute if to_arr.minute>9 else str(0)+str(to_arr.minute)} on {to_arr.year}-{to_arr.month}-{to_arr.day}
+Flight Duration:       {offer['itineraries'][0]['duration'].strip('PT').lower()}
+Return Departure Time: {re_dep.hour}:{re_dep.minute if re_dep.minute>9 else str(0)+str(re_dep.minute)} on {re_dep.year}-{re_dep.month}-{re_dep.day}
+Return Arrival Time:   {re_arr.hour}:{re_arr.minute if re_arr.minute>9 else str(0)+str(re_arr.minute)} on {re_arr.year}-{re_arr.month}-{re_arr.day}
+Flight Duration:       {offer['itineraries'][1]['duration'].strip('PT').lower()}
+Total Price:           ${offer['price']['total']}
+Flight Class:          {offer['travelerPricings'][0]['fareDetailsBySegment'][0]['cabin']}\n\n
+'''
     except ResponseError:
         result = 'It seems there was an error in your booking, would you like to try something else?'
     return result
@@ -478,7 +481,7 @@ flight_info = {'depart_date':0,
                'budget':0
               }
 context = ''
-pleasantries = ['hey','hi','hello','hola','greetings','bye','goodbye','see ya','later','see you','peace']
+pleasantries = ['okay','hey','hi','hello','hola','greetings','bye','goodbye','see ya','later','see you','peace']
 
 def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, merge-nested-ifs
     global context
@@ -488,7 +491,7 @@ def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, m
         return get_flight(flight_info, code_dict)
 
     # The following is a way to handle single word/entity answers
-    elif len(nlp(message)) <= 3:
+    elif len(nlp(message)) <= 2:
         if context in ['dest', 'return']:
             message = 'to ' + message
             context = '' # Reset context 
@@ -561,11 +564,12 @@ def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, m
             return random.choice(response_list_budget)
 
     elif all(constraint_bool):
-        finalize= f'''Awesome! Looks like I have everything I need to book your flight! Let me just confirm with you. 
-        You are booking a flight to {str(flight_info['dest_loc']).upper()}, and you are flying from {str(flight_info['origin_loc']).upper()}. 
-        You will be leaving on {flight_info['depart_date']} and returning on {flight_info['return_date']}. 
-        Finally, your budget is ${flight_info['budget']}. 
-        Is all this information correct? If yes, please type 'Confirmed'. If this is not correct, please provide the correct info in detail.
+        finalize= f'''
+Awesome! Looks like I have everything I need to book your flight! Let me just confirm with you. 
+You are booking a flight to {str(flight_info['dest_loc']).upper()}, and you are flying from {str(flight_info['origin_loc']).upper()}. 
+You will be leaving on {flight_info['depart_date']} and returning on {flight_info['return_date']}. 
+Finally, your budget is ${flight_info['budget']}. 
+Is all this information correct? If yes, please type 'Confirmed'. If this is not correct, please provide the correct info in detail.
         '''
         return finalize
 
@@ -578,9 +582,10 @@ async def on_message(message):
         # This is so that the bot never responds to its own message
         return
     # These statements will redirect
-    redirect_statement = f'''Hey {message.author.name}, I'm the Traveler. I'd love to help you book a flight! Please use detailed sentences to answer my questions,
-        If at any point you need to reset the information you have given me, simply type "Clear!" and we can restart. Let's use direct messaging 
-        for privacy.'''
+    redirect_statement = f'''
+Hey {message.author.name}, I'm the Traveler. I'd love to help you book a flight! Please use detailed sentences to answer my questions,
+If at any point you need to reset the information you have given me, simply type "Clear!" and we can restart. Let's use direct messaging 
+for privacy.'''
     # Need a way for the user to clear the info they have already input, in case of a mistake    
     
     if ((client.user.mentioned_in(message)) and (str(message.channel) =='travel-booking')):
