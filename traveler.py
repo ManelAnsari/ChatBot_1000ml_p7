@@ -31,9 +31,6 @@ nltk.download('stopwords')
 # We'll need json to open a file of intents
 import json
 
-# We will need to save the model
-import pickle
-
 # Some helper libraries
 import numpy as np
 import pandas as pd
@@ -140,6 +137,9 @@ convos = [
           ],
           ["I would like to book a trip",
            "Awesome, what sort of trip were you thinking?"              
+          ],
+          ["I'd like to book a vacation",
+           "Right on! What were you thinking of?"
           ]
          ]
 
@@ -214,6 +214,12 @@ def budget_matcher(tokenized):
                                       [{'ORTH':'$'},{'IS_DIGIT':True}])
     return matcher(tokenized)
 
+def any_matcher(tokenized):
+    matcher = Matcher(nlp.vocab)
+    matcher.add('AnyFinder', None, [{'ENT_TYPE':'MONEY'}],
+                                   [{'ENT_TYPE':'GPE'}],
+                                   [{"ENT_TYPE": "DATE"}])
+
 def entity_looker(message):
     '''
     This function looks at a message from the user and seeks for matches in dates, locations and budget
@@ -237,9 +243,12 @@ def entity_looker(message):
     
     # Budget Match
     B_match = not not budget_matcher(tokens)
+
+    # Any Match
+    A_match = not not any_matcher(tokens)
     
     # This returns a tuple of the Trues/Falses, so the functions know what they are looking for specifically.
-    return (DF_match, DT_match, O_match, D_match, B_match)
+    return (DF_match, DT_match, O_match, D_match, B_match, A_match)
 
 def entity_picker(message):
     '''
@@ -321,10 +330,10 @@ def convert_date(dtime):
     '''
     This function converts a date time object to a month, day, year. This is required for the API
     '''
-    YYYY = str(dtime.year)
-    MM = str(dtime.month) if int(dtime.month) >9 else '0'+str(dtime.month)
-    DD = str(dtime.day) if int(dtime.day)>9 else '0'+str(dtime.day)
-    return f"{YYYY}-{MM}-{DD}"
+    year = dtime.year
+    month = str(dtime.month) if int(dtime.month) >9 else '0'+str(dtime.month)
+    day = str(dtime.day) if int(dtime.day)>9 else '0'+str(dtime.day)
+    return f"{year}-{month}-{day}"
 
 def revert_date(dateStr):
     '''
@@ -410,7 +419,7 @@ def get_budget(message):
         budget_ls = re.findall(r'[\d\.\d]+', str(tokens[match[0][1]:]))
         budget = budget_ls[0]
     except IndexError:
-        budget = 0
+        budget = ''
 
     return budget
 
@@ -431,12 +440,7 @@ def iata_code_lookup(city, codes, origin_city=True):
     try: 
         iata_code = codes[city]
     except KeyError:
-        iata_code = ''
-        if origin_city:
-            print(f'Unfortunately there are no flights leaving {city.upper()} at this time.')
-        else:
-            print(f'Unfortunately there are no flights to {city.upper()} at this time.')
-        return None
+        iata_code = None
     return iata_code
 
 def get_flight(flight_info, codes):
@@ -444,23 +448,30 @@ def get_flight(flight_info, codes):
         client_id=os.getenv("AMADEUS_API_KEY"),
         client_secret=os.getenv("AMADEUS_SECRET")
     )
-    result = ''
-    try:
-        response = amadeus.shopping.flight_offers_search.get(
-            originLocationCode = iata_code_lookup(flight_info['origin_loc'], codes, origin_city=True),
-            destinationLocationCode = iata_code_lookup(flight_info['dest_loc'], codes, origin_city=False),
-            departureDate = flight_info['depart_date'],
-            returnDate = flight_info['return_date'],
-            maxPrice = flight_info['budget'],
-            currencyCode='CAD',
-            adults=1)
-        for i, offer in enumerate(response.data[:5]):
-            to_dep = dparser.parse(offer['itineraries'][0]['segments'][0]['departure']['at'],fuzzy=True)
-            to_arr = dparser.parse(offer['itineraries'][0]['segments'][0]['arrival']['at'],fuzzy=True)
-            re_dep = dparser.parse(offer['itineraries'][1]['segments'][0]['departure']['at'],fuzzy=True)
-            re_arr = dparser.parse(offer['itineraries'][1]['segments'][0]['arrival']['at'],fuzzy=True)
-            result += f'''
-Option ✈️ {i+1}
+    iata_origin = iata_code_lookup(flight_info['origin_loc'], codes, origin_city=True)
+    iata_dest = iata_code_lookup(flight_info['dest_loc'], codes, origin_city=False)
+    if iata_origin is None:
+        result = f"I'm afraid there are no flights leaving {flight_info['origin_loc'].upper()} at this time. Their borders must still be closed. Please choose a different city."
+    elif iata_dest is None:
+        result = f"I'm afraid there are no flights to {flight_info['dest_loc'].upper()} at this time. Their borders must still be closed. Please choose a different city."
+    else:
+        result = ''
+        try:
+            response = amadeus.shopping.flight_offers_search.get(
+                originLocationCode = iata_origin,
+                destinationLocationCode = iata_dest,
+                departureDate = flight_info['depart_date'],
+                returnDate = flight_info['return_date'],
+                maxPrice = flight_info['budget'],
+                currencyCode='CAD',
+                adults=1)
+            for i, offer in enumerate(response.data[:5]):
+                to_dep = dparser.parse(offer['itineraries'][0]['segments'][0]['departure']['at'],fuzzy=True)
+                to_arr = dparser.parse(offer['itineraries'][0]['segments'][0]['arrival']['at'],fuzzy=True)
+                re_dep = dparser.parse(offer['itineraries'][1]['segments'][0]['departure']['at'],fuzzy=True)
+                re_arr = dparser.parse(offer['itineraries'][1]['segments'][0]['arrival']['at'],fuzzy=True)
+                result += f'''Here are the 5 cheapest options for you!
+✈️ Option {i+1}
 Departure Time:        {to_dep.hour}:{to_dep.minute if to_dep.minute>9 else str(0)+str(to_dep.minute)} on {to_dep.year}-{to_dep.month}-{to_dep.day}
 Arrival Time:          {to_arr.hour}:{to_arr.minute if to_arr.minute>9 else str(0)+str(to_arr.minute)} on {to_arr.year}-{to_arr.month}-{to_arr.day}
 Flight Duration:       {offer['itineraries'][0]['duration'].strip('PT').lower()}
@@ -468,95 +479,97 @@ Return Departure Time: {re_dep.hour}:{re_dep.minute if re_dep.minute>9 else str(
 Return Arrival Time:   {re_arr.hour}:{re_arr.minute if re_arr.minute>9 else str(0)+str(re_arr.minute)} on {re_arr.year}-{re_arr.month}-{re_arr.day}
 Flight Duration:       {offer['itineraries'][1]['duration'].strip('PT').lower()}
 Total Price:           ${offer['price']['total']}
-Flight Class:          {offer['travelerPricings'][0]['fareDetailsBySegment'][0]['cabin']}\n\n
-'''
-    except ResponseError:
-        result = 'It seems there was an error in your booking, would you like to try something else?'
+Flight Class:          {offer['travelerPricings'][0]['fareDetailsBySegment'][0]['cabin']}\n'''
+
+            result += 'Will any of these work for you? If so, please respond with "Option X". Otherwise, please say "Declined"'
+        except ResponseError:
+            result = 'It seems there was an error in your booking, would you like to try something else?'
     return result
 
-flight_info = {'depart_date':0,
-               'return_date':0,
-               'origin_loc':0,
-               'dest_loc':0,
-               'budget':0
+flight_info = {'depart_date':'',
+               'return_date':'',
+               'origin_loc':'',
+               'dest_loc':'',
+               'budget':''
               }
-context = ''
-pleasantries = ['okay','hey','hi','hello','hola','greetings','bye','goodbye','see ya','later','see you','peace']
+context = 'dest'
+today = datetime.today()
+
+def reversed_dates(flight_info):
+    temp = flight_info['depart_date']
+    flight_info['depart_date'] = flight_info['return_date']
+    flight_info['return_date'] = temp
+    return "It seems you are attempting to travel back in time! Unfortunately we can't offer such a trip, so I've flipped the order of the dates for you!"
 
 def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, merge-nested-ifs
     global context
-    global pleasantries
-    # First, if the message contains a confirmation, we should continue with the API booking
-    if ('confirmed' in message) or ('Confirmed' in message):
-        return get_flight(flight_info, code_dict)
+    global today
+    global flight_info
 
     # The following is a way to handle single word/entity answers
-    elif len(nlp(message)) <= 2:
-        if context in ['dest', 'return']:
-            message = 'to ' + message
-            context = '' # Reset context 
-        elif context in ['orig', 'depart']:
-            message = 'from ' + message
-            context = ''
-        elif context == 'budget':
-            message = 'under' + message
-            context = ''
-        elif all(pls not in message.lower() for pls in pleasantries):
-            return 'Sorry, but I have a tough time understanding short sentences like that, could you please provide a little more detail?'
-
+    if context in ['dest', 'return']:
+        newM = 'to ' + message
+        context = '' # Reset context 
+    elif context in ['orig', 'depart']:
+        newM = 'from ' + message
+        context = ''
+    elif context == 'budget':
+        newM = 'keep it under ' + message
+        context = ''
+    else:
+        newM = message
+        
     # See what matches we have:
-    values = entity_picker(message)
+    values = entity_picker(newM)
+    flight_info['depart_date'] = values[0] if values[0] != '' else flight_info['depart_date']
+    flight_info['return_date'] = values[1] if values[1] != '' else flight_info['return_date']
+    flight_info['origin_loc'] = values[2] if values[2] != '' else flight_info['origin_loc']
+    flight_info['dest_loc'] = values[3] if values[3] != '' else flight_info['dest_loc'] 
+    flight_info['budget'] = values[4] if values[4] != '' else flight_info['budget']
 
-    if values[0] != '':
-        flight_info['depart_date'] = values[0]
+    if (
+        (flight_info['depart_date'] != '') 
+        and (flight_info['return_date'] != '')
+        and (revert_date(flight_info['return_date']) < revert_date(flight_info['depart_date']))
+        ):
+        return reversed_dates(flight_info)
+    elif (flight_info['depart_date'] != '') and (revert_date(flight_info['depart_date']) < today):
+        flight_info['depart_date'] = ''
+        context = 'depart'
+        return "Oops! Looks like your departure date has already passed, you can't travel back in time! Please enter a new departure date"
+    elif (flight_info['return_date'] != '') and (revert_date(flight_info['return_date']) < today):
+        flight_info['return_date'] = ''
+        context = 'return'
+        return "Oops! Looks like your return date has already passed, you can't travel back in time! Please enter a new return date"        
 
-    if values[1] != '':
-        flight_info['return_date'] = values[1]
-
-    if values[2] != '':
-        flight_info['origin_loc'] = values[2]
-
-    if values[3] != '':
-        flight_info['dest_loc'] = values[3]
-
-    if values[4] != '':
-        flight_info['budget'] = values[4]
-
-    if (flight_info['depart_date'] != 0) and (flight_info['return_date'] != 0):
-        if (revert_date(flight_info['return_date'])) < (revert_date(flight_info['depart_date'])):
-            temp = flight_info['depart_date']
-            flight_info['depart_date'] = flight_info['return_date']
-            flight_info['return_date'] = temp
-            return "It seems you are attempting to travel back in time! Unfortunately we can't offer such a trip, so I've flipped the order of the dates for you!"
-
-    constraint_bool = [vals!=0 for vals in flight_info.values()]
+    constraint_bool = [vals!='' for vals in flight_info.values()]
     if (any(constraint_bool)) and not (all(constraint_bool)):
-        if flight_info['dest_loc'] == 0:
+        if flight_info['dest_loc'] == '':
             response_list_dest_loc = ['Where did you want to go?', 
                                       'Where were you thinking of travelling to?', 
                                       'What is your desired destination?']
             context = 'dest' # Need a way to handle single word answers.
             return random.choice(response_list_dest_loc)
-        if flight_info['origin_loc'] == 0: 
+        if flight_info['origin_loc'] == '': 
             response_list_origin_loc = ['Where are you leaving from?', 
                                         'What city are you flying out of?', 
                                         'Where will you be flying from?']
             context = 'orig'
             return random.choice(response_list_origin_loc)
-        if flight_info['depart_date'] == 0:
+        if flight_info['depart_date'] == '':
             response_list_depart_date = ['When did you want to leave?', 
                                          'What dates were you thinking?', 
                                          'When is your travel date?', 
                                          'For what days should I book the flight?']
             context = 'depart'
             return random.choice(response_list_depart_date)
-        if flight_info['return_date'] == 0:
+        if flight_info['return_date'] == '':
             response_list_return_date = ['When did you want to come back?', 
                                          'When do you need to return?', 
                                          'What should I set for return date?']
             context = 'return'
             return random.choice(response_list_return_date)
-        if flight_info['budget'] == 0:
+        if flight_info['budget'] == '':
             response_list_budget = ['How much are you willing to spend on this trip?', 
                                     "What's your budget for this trip?", 
                                     "Do you have a price limit for the trip?"]
@@ -587,14 +600,15 @@ Hey {message.author.name}, I'm the Traveler. I'd love to help you book a flight!
 If at any point you need to reset the information you have given me, simply type "Clear!" and we can restart. Let's use direct messaging 
 for privacy.'''
     # Need a way for the user to clear the info they have already input, in case of a mistake    
-    
+    global flight_info
     if ((client.user.mentioned_in(message)) and (str(message.channel) =='travel-booking')):
         await message.author.create_dm()
         await message.author.dm_channel.send(redirect_statement)
 
-    elif (str(message.channel) != 'travel-booking'):
-        if 'clear!' in str(message.content.lower()):
-            global flight_info
+    elif str(message.channel) != 'travel-booking':
+        if any(
+            word in message.content.lower() for word in ['clear!', 'declined']
+        ):
             flight_info = {'depart_date':0,
                            'return_date':0,
                            'origin_loc':0,
@@ -602,9 +616,14 @@ for privacy.'''
                            'budget':0
                            }
             await message.channel.send("Information has been cleared! Let's start again! Where would you like to go?")
+        elif 'confirmed' in message.content.lower():
+            await message.channel.send(get_flight(flight_info, code_dict))
+        elif any(option in message.content.lower() for option in ['option 1', 'option 2', 'option 3', 'option 4', 'option 5']):
+            await message.channel.send("Excellent! You're flight has been booked, we will contact you again shortly for more information.")
+
         else:
-            bot_response = Traveler(str(message.content))
-            print(str(message.content))
+            bot_response = Traveler(message.content)
+            print(message.content)
             print(bot_response)
             await message.channel.send(bot_response)
 
