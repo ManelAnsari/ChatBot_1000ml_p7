@@ -144,6 +144,9 @@ convos = [
           ],
           ["I'd like to book a vacation",
            "Right on! What were you thinking of?"
+          ],
+          ['Can you help me book a flight?',
+           'Absolutely I can, what were you thinking?'
           ]
          ]
 
@@ -613,11 +616,11 @@ for privacy.'''
         if any(
             word in message.content.lower() for word in ['clear!', 'declined']
         ):
-            flight_info = {'depart_date':0,
-                           'return_date':0,
-                           'origin_loc':0,
-                           'dest_loc':0,
-                           'budget':0
+            flight_info = {'depart_date':'',
+                           'return_date':'',
+                           'origin_loc':'',
+                           'dest_loc':'',
+                           'budget':''
                            }
             await message.channel.send("Information has been cleared! Let's start again! Where would you like to go?")
         elif 'confirmed' in message.content.lower():
