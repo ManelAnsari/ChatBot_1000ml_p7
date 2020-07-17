@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 import os
 from datetime import datetime
+from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv(dotenv_path='')
 # The API
@@ -122,6 +123,9 @@ convos = [
           ],
           ['I want to take a vacation',
            'I can help you with that! What were you thinking?'
+          ],
+          ['I want to book a vacation',
+           'Sweet! What sort of vacation were you thinking?'
           ],
           ['I need a goddamn vacation',
            'Where do you come from, where do you go? Where are you coming from, Cotton Eyed Joe?'
@@ -319,9 +323,9 @@ def word_dates(date_text, today):
     if 'today' in date_text:
         date = today
     elif 'tomorrow' in date_text:
-        date = today + datetime.timedelta(days=1)
+        date = today + timedelta(days=1)
     elif 'next week' in date_text:
-        date = today + datetime.timedelta(days=7)
+        date = today + timedelta(days=7)
     else:
         date = None
     return date
@@ -455,7 +459,7 @@ def get_flight(flight_info, codes):
     elif iata_dest is None:
         result = f"I'm afraid there are no flights to {flight_info['dest_loc'].upper()} at this time. Their borders must still be closed. Please choose a different city."
     else:
-        result = ''
+        result = 'Here are the 5 cheapest options for you!'
         try:
             response = amadeus.shopping.flight_offers_search.get(
                 originLocationCode = iata_origin,
@@ -470,7 +474,7 @@ def get_flight(flight_info, codes):
                 to_arr = dparser.parse(offer['itineraries'][0]['segments'][0]['arrival']['at'],fuzzy=True)
                 re_dep = dparser.parse(offer['itineraries'][1]['segments'][0]['departure']['at'],fuzzy=True)
                 re_arr = dparser.parse(offer['itineraries'][1]['segments'][0]['arrival']['at'],fuzzy=True)
-                result += f'''Here are the 5 cheapest options for you!
+                result += f'''
 ✈️ Option {i+1}
 Departure Time:        {to_dep.hour}:{to_dep.minute if to_dep.minute>9 else str(0)+str(to_dep.minute)} on {to_dep.year}-{to_dep.month}-{to_dep.day}
 Arrival Time:          {to_arr.hour}:{to_arr.minute if to_arr.minute>9 else str(0)+str(to_arr.minute)} on {to_arr.year}-{to_arr.month}-{to_arr.day}
@@ -620,6 +624,8 @@ for privacy.'''
             await message.channel.send(get_flight(flight_info, code_dict))
         elif any(option in message.content.lower() for option in ['option 1', 'option 2', 'option 3', 'option 4', 'option 5']):
             await message.channel.send("Excellent! You're flight has been booked, we will contact you again shortly for more information.")
+        elif any (thanks in message.content.lower() for thanks in ['thanks','thank you','thank']):
+            await message.channel.send("No problem at all! I'm happy to help :)")
 
         else:
             bot_response = Traveler(message.content)
