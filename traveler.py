@@ -378,20 +378,24 @@ def get_origin(message):
     # Tokenize
     tokens = nlp(message)
     # Extract entities
-    entities = [(X.label_, X.text) for X in tokens.ents]
-    # get rid of anything not a date
-    loc_ent = [x for x in entities if x[0]=='GPE']
-    locs = [x[1].lower() for x in loc_ent]
+    match = origin_matcher(tokens)
+    origin_temp = tokens[match[0][1]:match[0][2]+1]
+    entities = [(X.label_, X.text) for X in origin_temp.ents]
+
+    origin = entities[0][1].lower()
+    # # get rid of anything not a date
+    # loc_ent = [x for x in entities if x[0]=='GPE']
+    # locs = [x[1].lower() for x in loc_ent]
     
-    if len(locs)>1:
-        # If there is more than one location in the string, we just need to figure out what order those locations
-        # are in, in the sentence, which this logic does.
-        if dest_matcher(tokens)[0][2] > origin_matcher(tokens)[0][2]:
-            origin = locs[0]
-        else:
-            origin = locs[1]
-    else:
-        origin = locs[0]
+    # if len(locs)>1:
+    #     # If there is more than one location in the string, we just need to figure out what order those locations
+    #     # are in, in the sentence, which this logic does.
+    #     if dest_matcher(tokens)[0][2] > origin_matcher(tokens)[0][2]:
+    #         origin = locs[0]
+    #     else:
+    #         origin = locs[1]
+    # else:
+    #     origin = locs[0]
         
     return origin
 
@@ -400,20 +404,23 @@ def get_dest(message):
     # Tokenize
     tokens = nlp(message)
     # Extract entities
-    entities = [(X.label_, X.text) for X in tokens.ents]
-    # get rid of anything not a date
-    loc_ent = [x for x in entities if x[0]=='GPE']
-    locs = [x[1].lower() for x in loc_ent]
+    match = dest_matcher(tokens)
+    dest_temp = tokens[match[0][1]:match[0][2]+1]
+    entities = [(X.label_, X.text) for X in dest_temp.ents]
+    dest = entities[0][1].lower()
+    # # get rid of anything not a date
+    # loc_ent = [x for x in entities if x[0]=='GPE']
+    # locs = [x[1].lower() for x in loc_ent]
     
-    if len(locs)>1:
-        # If there is more than one location in the string, we just need to figure out what order those locations
-        # are in, in the sentence, which this logic does.
-        if dest_matcher(tokens)[0][2] > origin_matcher(tokens)[0][2]:
-            dest = locs[1]
-        else:
-            dest = locs[0]
-    else:
-        dest = locs[0]
+    # if len(locs)>1:
+    #     # If there is more than one location in the string, we just need to figure out what order those locations
+    #     # are in, in the sentence, which this logic does.
+    #     if dest_matcher(tokens)[0][2] > origin_matcher(tokens)[0][2]:
+    #         dest = locs[1]
+    #     else:
+    #         dest = locs[0]
+    # else:
+    #     dest = locs[0]
         
     return dest
 
@@ -451,6 +458,7 @@ def iata_code_lookup(city, codes, origin_city=True):
     return iata_code
 
 def get_flight(flight_info, codes):
+    global context
     amadeus = Client(
         client_id=os.getenv("AMADEUS_API_KEY"),
         client_secret=os.getenv("AMADEUS_SECRET")
@@ -458,8 +466,10 @@ def get_flight(flight_info, codes):
     iata_origin = iata_code_lookup(flight_info['origin_loc'], codes, origin_city=True)
     iata_dest = iata_code_lookup(flight_info['dest_loc'], codes, origin_city=False)
     if iata_origin is None:
+        context = 'orig'
         result = f"I'm afraid there are no flights leaving {flight_info['origin_loc'].upper()} at this time. Their borders must still be closed. Please choose a different city."
     elif iata_dest is None:
+        context = 'dest'
         result = f"I'm afraid there are no flights to {flight_info['dest_loc'].upper()} at this time. Their borders must still be closed. Please choose a different city."
     else:
         result = 'Here are the 5 cheapest options for you!'
