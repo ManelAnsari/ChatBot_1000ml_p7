@@ -111,6 +111,13 @@ byes = [['Bye','Goodbye!'],
         ['Goodbye!', 'Bye for now!']
        ]
 
+# Thank yous
+thanks = [['Thanks', 'No problem at all!'],
+          ['thanks', 'No problem at all!'],
+          ['thank you', "I'm happy to help :)"],
+          ['Thank you', "I'm happy to help :)"]
+         ]
+
 convos = [
           ["I would like to book a flight.",
            "I can help you with that. Where were you thinking of traveling to?"
@@ -159,6 +166,9 @@ travel_listtrainer = ListTrainer(chatbot)
 
 for convo in convos:
   travel_listtrainer.train(convo)
+
+for ty in thanks:
+  travel_listtrainer.train(ty)
 
 for hi in hellos:
   travel_listtrainer.train(hi)
@@ -465,6 +475,8 @@ def get_flight(flight_info, codes):
                 maxPrice = flight_info['budget'],
                 currencyCode='CAD',
                 adults=1)
+            if len(response.data)<1:
+                return "I'm afraid I can't find any flights between these two locations for that time. Please provide updated information for a different trip."
             for i, offer in enumerate(response.data[:5]):
                 to_dep = dparser.parse(offer['itineraries'][0]['segments'][0]['departure']['at'],fuzzy=True)
                 to_arr = dparser.parse(offer['itineraries'][0]['segments'][0]['arrival']['at'],fuzzy=True)
@@ -542,6 +554,13 @@ def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, m
         context = 'return'
         return "Oops! Looks like your return date has already passed, you can't travel back in time! Please enter a new return date"        
 
+    elif 'london' == flight_info['origin_loc'].lower():
+        context = 'orig'
+        return "It seems you want to travel from London, is that England or Ontario?"
+    elif 'london' == flight_info['dest_loc'].lower():
+        context = 'dest'
+        return "It seems you want to travel to London, is that England or Ontario?"
+
     constraint_bool = [vals!='' for vals in flight_info.values()]
     if (any(constraint_bool)) and not (all(constraint_bool)):
         if flight_info['dest_loc'] == '':
@@ -606,6 +625,11 @@ for privacy.'''
         await message.author.dm_channel.send(redirect_statement)
 
     elif str(message.channel) != 'travel-booking':
+        global context
+        global flight_info
+        # Start with bot response, but don't output
+        
+        # When we want to clear the info:
         if any(
             word in message.content.lower() for word in ['clear!', 'declined']
         ):
@@ -615,18 +639,49 @@ for privacy.'''
                            'dest_loc':'',
                            'budget':''
                            }
+            context = 'dest'
             await message.channel.send("Information has been cleared! Let's start again! Where would you like to go?")
+        # confirming the flight information queues this
         elif 'confirmed' in message.content.lower():
             await message.channel.send(get_flight(flight_info, code_dict))
+        # choosing a flight option queues this
         elif any(option in message.content.lower() for option in ['option 1', 'option 2', 'option 3', 'option 4', 'option 5']):
-            await message.channel.send("Excellent! You're flight has been booked, we will contact you again shortly for more information.")
-        elif any (thanks in message.content.lower() for thanks in ['thanks','thank you','thank']):
-            await message.channel.send("No problem at all! I'm happy to help :)")
+            await message.channel.send("Excellent! You're flight has been booked, we will contact you again shortly for more information.")        
+
+        # London is our only location double, so we should parse this.
+        elif (context == 'orig') and ('england' in message.content.lower()):
+            flight_info['origin_loc'] = 'london england'
+            context = ''
+            await message.channel.send("Okay great, I've made the change, let's keep going")
+        elif (context == 'orig') and ('ontario' in message.content.lower()):
+            flight_info['origin_loc'] = 'london ontario'
+            context = ''
+            await message.channel.send("Okay great, I've made the change, let's keep going")
+
+        elif (context == 'dest') and ('eng' in message.content.lower()):
+            flight_info['dest_loc'] = 'london england'
+            context = ''
+            await message.channel.send("Okay great, I've made the change, let's keep going")
+        elif (context == 'dest') and ('ont' in message.content.lower()):
+            flight_info['dest_loc'] = 'london ontario'
+            context = ''
+            await message.channel.send("Okay great, I've made the change, let's keep going")
+
+        # elif 'london' == flight_info['origin_loc'].lower():
+        #     context = 'orig'
+        #     await message.channel.send("It seems you want to travel from London, is that England or Ontario?")
+        # elif 'london' == flight_info['dest_loc'].lower():
+        #     context = 'dest'
+        #     await message.channel.send("It seems you want to travel to London, is that England or Ontario?")
+        # Without this, the context is wrongly updated (because of the ordering of the code)
+        elif any(loc == flight_info['dest_loc'] for loc in ['england', 'ontario']):
+            flight_info['dest_loc']=''
+        elif any(loc == flight_info['origin_loc'] for loc in ['england', 'ontario']):
+            flight_info['origin_loc']=''
 
         else:
             bot_response = Traveler(message.content)
-            print(message.content)
-            print(bot_response)
+            print(flight_info)
             await message.channel.send(bot_response)
 
 

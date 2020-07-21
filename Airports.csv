@@ -1,227 +1,261 @@
-Location,Code
-Atlanta,ATL
-Beijing,PEK
-Los Angeles,LAX
-Tokyo,HND
-Dubai,DXB
-Chicago,ORD
-London,LHR
-Shanghai,PVG
-Paris,CDG
-Dallas,DFW
-Guangdong,CAN
-Holland,AMS
-Frankfurt,FRA
-Denver,DEN
-Changi,SIN
-Delhi,DEL
-New York City,JFK
-Madrid,MAD
-Barcelona,BCN
-Istanbul,IST
-Washington,SEA
-Las Vegas,LAS
-Toronto,YYZ
-Dominica,DOM
-Sydney,SYD
-Bali,DPS
-Vancouver,YVR
-Orlando,MCO
-Venice,VCE
-Rome,FCO
-Berlin,TXL
-Bangkok,BKK
-Amsterdam,AMS
-Montreal,YUL
-Denmark,CPH
-Naples,NAP
-Quito,UIO
-Lima,LIM
-Quito,UIO
-Lima,LIM
-Managua,MGA
-Sucre,SRE
-Port of Spain,POS
-Mexico City,MEX
-Ottawa,YOW
-Kingstown,SVD
-Montevideo,MVD
-Bridgetown,BGI
-Belmopan,BCV
-Saint George's,GND
-Georgetown,GEO
-San José,SJO
-Santiago,SCL
-Nassau,NAS
-Castries,SLU
-Tegucigalpa,TGU
-Kingston,KIN
-Guatemala City,GUA
-Port-au-Prince,PAP
-Basseterre,BBR
-San Salvador,SAL
-Caracas,CCS
-Brasília,BSB
-Saint John's,ANU
-Asunción,ASU
-Bogotá,BOG
-Washington D.C.,WAS
-Buenos Aires,BUE
-Paramaribo,PBM
-Roseau,DCF
-Havana,HAV
-Panama City,PAK
-Santo Domingo,SDQ
-Tirana,TIA
-Yerevan,EVN
-Baku,BAK
-Sofia,SOF
-Minsk,MSQ
-Prague,PRG
-Zagreb,ZAG
-Tallinn,TLL
-Tbilisi,TBS
-Budapest,BUD
-Astana,TSE
-Vilnius,VNO
-Brussels,BRU
-Kiev,IEV
-Bern,BRN
-Paris,PAR
-Skopje,SKP
-Belgrade,BEG
-Valletta,MLA
-Madrid,MAD
-Warsaw,WAW
-Berlin,BER
-Stockholm,STO
-Bratislava,BTS
-Podgorica,TGD
-Athens,ATH
-London,LON
-Amsterdam,AMS
-Vienna,VIE
-Sarajevo,SJJ
-Monaco,MCM
-Nicosia,ECN
-Luxembourg,LUX
-Oslo,OSL
-Ankara,ANK
-Dublin,DUB
-Chisinau,KIV
-Bucharest,BUH
-Copenhagen,CPH
-Helsinki,HEL
-Moscow,MOW
-Reykjavík,KEF
-Ljubljana,LJU
-Lisbon,LIS
-Riga,RIX
-Rome,FCO
-Tashkent,TAS
-Manama,WGF
-Doha,DOH
-Vientiane,VTE
-Beirut,BEY
-Abu Dhabi,AUH
-Ashgabat,ASB
-Riyadh,RUH
-Tokyo,TYO
-Kathmandu,KTM
-Sri Jayawardenapura,DWO
-Islamabad,ISB
-Damascus,DAM
-Beijing,BJS
-Amman,AMM
-Naypyidaw,NYT
-Baghdad,BGW
-Dhaka,DAC
-Tehran,THR
-Manila,MNL
-Seoul,ICN
-Jerusalem,JRS
-Kabul,KBL
-Bangkok,BKK
-New Delhi,DEL
-Ulaanbaatar,ULN
-Kuala Lumpur,KUL
-Kuwait City,KWI
-Sana'a,SAH
-Pyongyang,FNJ
-Bishkek,FRU
-Dushanbe,DYU
-Malé,MLE
-Singapore,SIN
-Jakarta,JKT
-Bandar Seri Begawan,BWN
-Hanoi,HAN
-Phnom Penh,PNH
-Muscat,MCT
-Dili,DIL
-Ramallah and Gaza,ZDM
-Addis Ababa,ADD
-Port Louis,MRU
-Antananarivo,TNR
-Kampala,KLA
-Cairo,CAI
-Kinshasa,FIH
-Asmara,ASM
-Bangui,BGF
-Maseru,MSU
-Gaborone,GBE
-Lusaka,LUN
-Tunis,TUN
-Dodoma,DOD
-Lomé,LFW
-São Tomé,TMS
-Niamey,NIM
-Bamako,BKO
-Freetown,FNA
-Bujumbura,BJM
-Bissau,OXB
-Conakry,CKY
-Algiers,ALG
-Nouakchott,NKC
-Matsapha,MTS
-Tripoli,TIP
-Abuja,ABV
-Djibouti,JYB
-Moroni,HAH
-Kigali,KGL
-Yaoundé,YAO
-Nairobi,NBO
-N'Djamena,NDJ
-Windhoek,WDH
-Banjul,BJL
-Dakar,DKR
-Pretoria,PRY
-Cape Town,CPT
-Bloemfontein,BFN
-Victoria,SEZ
-Accra,ACC
-Yamoussoukro,ASK
-Maputo,MPM
-Ouagadougou,OUA
-Brazzaville,BZV
-Monrovia,MLW
-Malabo,SSG
-Harare,HRE
-Praia,RAI
-Juba,JUB
-Mogadishu,MGQ
-Rabat,RBA
-Khartoum,KRT
-Libreville,LBV
-Lilongwe,LLW
-Luanda,LAD
-Canberra,CBR
-Majuro,MAJ
-Wellington,WLG
-Port Moresby,POM
-Honiara,HIR
-Port Vila,VLU
-Suva,SUV
-Nuku'alofa,TBU
-Apia,APW
-Funafuti,FUN
-Tarawa,TRW
+Location,Code,,,,,,,,,,
+Atlanta,ATL,,,,,,,,,,
+Beijing,PEK,,,,,,,,,,
+Los Angeles,LAX,,,,,,,,,,
+Tokyo,HND,,,,,,,,,,
+Dubai,DXB,,,,,,,,,,
+Chicago,ORD,,,,,,,,,,
+London England,LHR,,,,,,,,,,
+Shanghai,PVG,,,,,,,,,,
+Paris,CDG,,,,,,,,,,
+Dallas,DFW,,,,,,,,,,
+Guangdong,CAN,,,,,,,,,,
+Holland,AMS,,,,,,,,,,
+Frankfurt,FRA,,,,,,,,,,
+Denver,DEN,,,,,,,,,,
+Changi,SIN,,,,,,,,,,
+Delhi,DEL,,,,,,,,,,
+New York City,JFK,,,,,,,,,,
+Madrid,MAD,,,,,,,,,,
+Barcelona,BCN,,,,,,,,,,
+Istanbul,IST,,,,,,,,,,
+Washington,SEA,,,,,,,,,,
+Las Vegas,LAS,,,,,,,,,,
+Toronto,YYZ,,,,,,,,,,
+Dominica,DOM,,,,,,,,,,
+Sydney,SYD,,,,,,,,,,
+Bali,DPS,,,,,,,,,,
+Vancouver,YVR,,,,,,,,,,
+Orlando,MCO,,,,,,,,,,
+Venice,VCE,,,,,,,,,,
+Rome,FCO,,,,,,,,,,
+Berlin,TXL,,,,,,,,,,
+Bangkok,BKK,,,,,,,,,,
+Amsterdam,AMS,,,,,,,,,,
+Montreal,YUL,,,,,,,,,,
+Denmark,CPH,,,,,,,,,,
+Naples,NAP,,,,,,,,,,
+Quito,UIO,,,,,,,,,,
+Lima,LIM,,,,,,,,,,
+Quito,UIO,,,,,,,,,,
+Lima,LIM,,,,,,,,,,
+Managua,MGA,,,,,,,,,,
+Sucre,SRE,,,,,,,,,,
+Port of Spain,POS,,,,,,,,,,
+Mexico City,MEX,,,,,,,,,,
+Ottawa,YOW,,,,,,,,,,
+Kingstown,SVD,,,,,,,,,,
+Montevideo,MVD,,,,,,,,,,
+Bridgetown,BGI,,,,,,,,,,
+Belmopan,BCV,,,,,,,,,,
+Saint George's,GND,,,,,,,,,,
+Georgetown,GEO,,,,,,,,,,
+San José,SJO,,,,,,,,,,
+Santiago,SCL,,,,,,,,,,
+Nassau,NAS,,,,,,,,,,
+Castries,SLU,,,,,,,,,,
+Tegucigalpa,TGU,,,,,,,,,,
+Kingston,KIN,,,,,,,,,,
+Guatemala City,GUA,,,,,,,,,,
+Port-au-Prince,PAP,,,,,,,,,,
+Basseterre,BBR,,,,,,,,,,
+San Salvador,SAL,,,,,,,,,,
+Caracas,CCS,,,,,,,,,,
+Brasília,BSB,,,,,,,,,,
+Saint John's,ANU,,,,,,,,,,
+Asunción,ASU,,,,,,,,,,
+Bogotá,BOG,,,,,,,,,,
+Washington D.C.,WAS,,,,,,,,,,
+Buenos Aires,BUE,,,,,,,,,,
+Paramaribo,PBM,,,,,,,,,,
+Roseau,DCF,,,,,,,,,,
+Havana,HAV,,,,,,,,,,
+Panama City,PAK,,,,,,,,,,
+Santo Domingo,SDQ,,,,,,,,,,
+Tirana,TIA,,,,,,,,,,
+Yerevan,EVN,,,,,,,,,,
+Baku,BAK,,,,,,,,,,
+Sofia,SOF,,,,,,,,,,
+Minsk,MSQ,,,,,,,,,,
+Prague,PRG,,,,,,,,,,
+Zagreb,ZAG,,,,,,,,,,
+Tallinn,TLL,,,,,,,,,,
+Tbilisi,TBS,,,,,,,,,,
+Budapest,BUD,,,,,,,,,,
+Astana,TSE,,,,,,,,,,
+Vilnius,VNO,,,,,,,,,,
+Brussels,BRU,,,,,,,,,,
+Kiev,IEV,,,,,,,,,,
+Bern,BRN,,,,,,,,,,
+Paris,PAR,,,,,,,,,,
+Skopje,SKP,,,,,,,,,,
+Belgrade,BEG,,,,,,,,,,
+Valletta,MLA,,,,,,,,,,
+Madrid,MAD,,,,,,,,,,
+Warsaw,WAW,,,,,,,,,,
+Berlin,BER,,,,,,,,,,
+Stockholm,STO,,,,,,,,,,
+Bratislava,BTS,,,,,,,,,,
+Podgorica,TGD,,,,,,,,,,
+Athens,ATH,,,,,,,,,,
+London,LON,,,,,,,,,,
+Amsterdam,AMS,,,,,,,,,,
+Vienna,VIE,,,,,,,,,,
+Sarajevo,SJJ,,,,,,,,,,
+Monaco,MCM,,,,,,,,,,
+Nicosia,ECN,,,,,,,,,,
+Luxembourg,LUX,,,,,,,,,,
+Oslo,OSL,,,,,,,,,,
+Ankara,ANK,,,,,,,,,,
+Dublin,DUB,,,,,,,,,,
+Chisinau,KIV,,,,,,,,,,
+Bucharest,BUH,,,,,,,,,,
+Copenhagen,CPH,,,,,,,,,,
+Helsinki,HEL,,,,,,,,,,
+Moscow,MOW,,,,,,,,,,
+Reykjavík,KEF,,,,,,,,,,
+Ljubljana,LJU,,,,,,,,,,
+Lisbon,LIS,,,,,,,,,,
+Riga,RIX,,,,,,,,,,
+Rome,FCO,,,,,,,,,,
+Tashkent,TAS,,,,,,,,,,
+Manama,WGF,,,,,,,,,,
+Doha,DOH,,,,,,,,,,
+Vientiane,VTE,,,,,,,,,,
+Beirut,BEY,,,,,,,,,,
+Abu Dhabi,AUH,,,,,,,,,,
+Ashgabat,ASB,,,,,,,,,,
+Riyadh,RUH,,,,,,,,,,
+Tokyo,TYO,,,,,,,,,,
+Kathmandu,KTM,,,,,,,,,,
+Sri Jayawardenapura,DWO,,,,,,,,,,
+Islamabad,ISB,,,,,,,,,,
+Damascus,DAM,,,,,,,,,,
+Beijing,BJS,,,,,,,,,,
+Amman,AMM,,,,,,,,,,
+Naypyidaw,NYT,,,,,,,,,,
+Baghdad,BGW,,,,,,,,,,
+Dhaka,DAC,,,,,,,,,,
+Tehran,THR,,,,,,,,,,
+Manila,MNL,,,,,,,,,,
+Seoul,ICN,,,,,,,,,,
+Jerusalem,JRS,,,,,,,,,,
+Kabul,KBL,,,,,,,,,,
+Bangkok,BKK,,,,,,,,,,
+New Delhi,DEL,,,,,,,,,,
+Ulaanbaatar,ULN,,,,,,,,,,
+Kuala Lumpur,KUL,,,,,,,,,,
+Kuwait City,KWI,,,,,,,,,,
+Sana'a,SAH,,,,,,,,,,
+Pyongyang,FNJ,,,,,,,,,,
+Bishkek,FRU,,,,,,,,,,
+Dushanbe,DYU,,,,,,,,,,
+Malé,MLE,,,,,,,,,,
+Singapore,SIN,,,,,,,,,,
+Jakarta,JKT,,,,,,,,,,
+Bandar Seri Begawan,BWN,,,,,,,,,,
+Hanoi,HAN,,,,,,,,,,
+Phnom Penh,PNH,,,,,,,,,,
+Muscat,MCT,,,,,,,,,,
+Dili,DIL,,,,,,,,,,
+Ramallah and Gaza,ZDM,,,,,,,,,,
+Addis Ababa,ADD,,,,,,,,,,
+Port Louis,MRU,,,,,,,,,,
+Antananarivo,TNR,,,,,,,,,,
+Kampala,KLA,,,,,,,,,,
+Cairo,CAI,,,,,,,,,,
+Kinshasa,FIH,,,,,,,,,,
+Asmara,ASM,,,,,,,,,,
+Bangui,BGF,,,,,,,,,,
+Maseru,MSU,,,,,,,,,,
+Gaborone,GBE,,,,,,,,,,
+Lusaka,LUN,,,,,,,,,,
+Tunis,TUN,,,,,,,,,,
+Dodoma,DOD,,,,,,,,,,
+Lomé,LFW,,,,,,,,,,
+São Tomé,TMS,,,,,,,,,,
+Niamey,NIM,,,,,,,,,,
+Bamako,BKO,,,,,,,,,,
+Freetown,FNA,,,,,,,,,,
+Bujumbura,BJM,,,,,,,,,,
+Bissau,OXB,,,,,,,,,,
+Conakry,CKY,,,,,,,,,,
+Algiers,ALG,,,,,,,,,,
+Nouakchott,NKC,,,,,,,,,,
+Matsapha,MTS,,,,,,,,,,
+Tripoli,TIP,,,,,,,,,,
+Abuja,ABV,,,,,,,,,,
+Djibouti,JYB,,,,,,,,,,
+Moroni,HAH,,,,,,,,,,
+Kigali,KGL,,,,,,,,,,
+Yaoundé,YAO,,,,,,,,,,
+Nairobi,NBO,,,,,,,,,,
+N'Djamena,NDJ,,,,,,,,,,
+Windhoek,WDH,,,,,,,,,,
+Banjul,BJL,,,,,,,,,,
+Dakar,DKR,,,,,,,,,,
+Pretoria,PRY,,,,,,,,,,
+Cape Town,CPT,,,,,,,,,,
+Bloemfontein,BFN,,,,,,,,,,
+Victoria,SEZ,,,,,,,,,,
+Accra,ACC,,,,,,,,,,
+Yamoussoukro,ASK,,,,,,,,,,
+Maputo,MPM,,,,,,,,,,
+Ouagadougou,OUA,,,,,,,,,,
+Brazzaville,BZV,,,,,,,,,,
+Monrovia,MLW,,,,,,,,,,
+Malabo,SSG,,,,,,,,,,
+Harare,HRE,,,,,,,,,,
+Praia,RAI,,,,,,,,,,
+Juba,JUB,,,,,,,,,,
+Mogadishu,MGQ,,,,,,,,,,
+Rabat,RBA,,,,,,,,,,
+Khartoum,KRT,,,,,,,,,,
+Libreville,LBV,,,,,,,,,,
+Lilongwe,LLW,,,,,,,,,,
+Luanda,LAD,,,,,,,,,,
+Canberra,CBR,,,,,,,,,,
+Majuro,MAJ,,,,,,,,,,
+Wellington,WLG,,,,,,,,,,
+Port Moresby,POM,,,,,,,,,,
+Honiara,HIR,,,,,,,,,,
+Port Vila,VLU,,,,,,,,,,
+Suva,SUV,,,,,,,,,,
+Nuku'alofa,TBU,,,,,,,,,,
+Apia,APW,,,,,,,,,,
+Funafuti,FUN,,,,,,,,,,
+Tarawa,TRW,,,,,,,,,,
+Atlanta,ATL,,,,,,,,,,
+San Francisco,SFO,,,,,,,,,,
+Seattle,SEA,,,,,,,,,,
+Orlando,MCO,,,,,,,,,,
+Charlotte,CLT,,,,,,,,,,
+Phoenix,PHX,,,,,,,,,,
+Houston,IAH,,,,,,,,,,
+Miami,MIA,,,,,,,,,,
+Boston,BOS,,,,,,,,,,
+Minneapolis,MSP,,,,,,,,,,
+Fort Lauderdale,FLL,,,,,,,,,,
+Detroit,DTW,,,,,,,,,,
+Philadelphia,PHL,,,,,,,,,,
+Baltimore,BWI,,,,,,,,,,
+Salt Lake City,SLC,,,,,,,,,,
+San Diego,SAN,,,,,,,,,,
+Chicago,MDW,,,,,,,,,,
+Tampa,TPA,,,,,,,,,,
+Portland,PDX,,,,,,,,,,
+Honolulu,HNL,,,,,,,,,,
+Calgary,YYC,,,,,,,,,,
+Edmonton,YEG,,,,,,,,,,
+Gander,YQX,,,,,,,,,,
+Moncton,YQM,,,,,,,,,,
+Halifax,YHZ,,,,,,,,,,
+,,,,,,Hamilton,Ontario,YHM,CYHM,71263,110 (450)
+London Ontario,YXU,,,,,,,,,,
+Ottawa,YOW,,,,,,,,,,
+Quebec City,YQB,,,,,,,,,,
+Regina,YQR,,,,,,,,,,
+Saskatoon,YXE,,,,,,,,,,
+St. John's,YYT,,,,,,,,,,
+Victoria,YYJ,,,,,,,,,,
+Winnipeg,YWG,,,,,,,,,,
