@@ -1,42 +1,4 @@
-Location,Code
-Atlanta,ATL
-Beijing,PEK
-Los Angeles,LAX
-Tokyo,HND
-Dubai,DXB
-Chicago,ORD
-London,LHR
-Shanghai,PVG
-Paris,CDG
-Dallas,DFW
-Guangdong,CAN
-Holland,AMS
-Frankfurt,FRA
-Denver,DEN
-Changi,SIN
-Delhi,DEL
-New York City,JFK
-Madrid,MAD
-Barcelona,BCN
-Istanbul,IST
-Washington,SEA
-Las Vegas,LAS
-Toronto,YYZ
-Dominica,DOM
-Sydney,SYD
-Bali,DPS
-Vancouver,YVR
-Orlando,MCO
-Venice,VCE
-Rome,FCO
-Berlin,TXL
-Bangkok,BKK
-Amsterdam,AMS
-Montreal,YUL
-Denmark,CPH
-Naples,NAP
-Quito,UIO
-Lima,LIM
+0,1
 Quito,UIO
 Lima,LIM
 Managua,MGA

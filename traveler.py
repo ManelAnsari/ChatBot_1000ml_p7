@@ -145,6 +145,9 @@ convos = [
           ["I'd like to book a vacation",
            "Right on! What were you thinking of?"
           ],
+          ["I would like to book a vacation",
+           "Right on! What were you thinking of?"
+          ],
           ['Can you help me book a flight?',
            'Absolutely I can, what were you thinking?'
           ]
@@ -190,6 +193,7 @@ def return_date_matcher(tokenized):
                                       [{'LOWER':'back'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'for'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'until'}, {"ENT_TYPE": "DATE"}],
+                                      [{'ORTH':'-'}, {"ENT_TYPE": "DATE"}],
                                       [{'LOWER':'to'}, {"ENT_TYPE": "DATE"}])
     return matcher(tokenized)
    
@@ -315,41 +319,12 @@ def get_depart_date(message):
     # Next, we will look to see if someone used the words "tomorrow", "next week" or "today"
     today = datetime.today()
     
-    if any(day in desired_date for day in ['today','tomorrow','next week']):
+    if any(day in desired_date for day in ['today','tomorrow','next week', 'one week']):
         depart_date = word_dates(desired_date, today)
     else: 
         depart_date = dparser.parse(desired_date,fuzzy=True)
         
     return depart_date
-
-def word_dates(date_text, today):
-    if 'today' in date_text:
-        date = today
-    elif 'tomorrow' in date_text:
-        date = today + timedelta(days=1)
-    elif 'next week' in date_text:
-        date = today + timedelta(days=7)
-    else:
-        date = None
-    return date
-
-def convert_date(dtime):
-    '''
-    This function converts a date time object to a month, day, year. This is required for the API
-    '''
-    year = dtime.year
-    month = str(dtime.month) if int(dtime.month) >9 else '0'+str(dtime.month)
-    day = str(dtime.day) if int(dtime.day)>9 else '0'+str(dtime.day)
-    return f"{year}-{month}-{day}"
-
-def revert_date(dateStr):
-    '''
-    This function takes in a datestring of the form 'YYYY-mm-dd' and converts it to datetime
-    '''
-    YYYY = int(dateStr[0:4])
-    mm = int(dateStr[5:7])
-    dd = int(dateStr[8:10])
-    return datetime(YYYY,mm,dd)
 
 def get_return_date(message):
     '''
@@ -366,12 +341,50 @@ def get_return_date(message):
     # Next, we will look to see if someone used the words "tomorrow", "next week" or "today"
     today = datetime.today()
     
-    if any(day in desired_date for day in ['today','tomorrow','next week']):
+    if any(day in desired_date for day in ['today','tomorrow','next week', 'one week']):
         return_date = word_dates(desired_date, today)
     else: 
         return_date = dparser.parse(desired_date,fuzzy=True)
         
     return return_date
+
+def word_dates(date_text, today):
+    global flight_info
+    if 'today' in date_text:
+        date = today
+    elif 'tomorrow' in date_text:
+        date = today + timedelta(days=1)
+    elif 'next week' in date_text:
+        date = today + timedelta(days=7)
+    elif 'one week' in date_text:
+        date = revert_date(flight_info['origin date'] + timedelta(days=7), today)
+    elif 'one month' in date_text:
+        date = revert_date(flight_info['origin date'] + timedelta(months=1), today)
+    else:
+        date = None
+    return date
+
+def convert_date(dtime):
+    '''
+    This function converts a date time object to a month, day, year. This is required for the API
+    '''
+    year = dtime.year
+    month = str(dtime.month) if int(dtime.month) >9 else '0'+str(dtime.month)
+    day = str(dtime.day) if int(dtime.day)>9 else '0'+str(dtime.day)
+    return f"{year}-{month}-{day}"
+
+def revert_date(dateStr, today):
+    '''
+    This function takes in a datestring of the form 'YYYY-mm-dd' and converts it to datetime
+    '''
+    try:
+        YYYY = int(dateStr[0:4])
+        mm = int(dateStr[5:7])
+        dd = int(dateStr[8:10])
+        time = datetime(YYYY,mm,dd)
+    except:
+        time = today
+    return time
 
 def get_origin(message):
     
@@ -382,22 +395,7 @@ def get_origin(message):
     origin_temp = tokens[match[0][1]:match[0][2]+1]
     entities = [(X.label_, X.text) for X in origin_temp.ents]
 
-    origin = entities[0][1].lower()
-    # # get rid of anything not a date
-    # loc_ent = [x for x in entities if x[0]=='GPE']
-    # locs = [x[1].lower() for x in loc_ent]
-    
-    # if len(locs)>1:
-    #     # If there is more than one location in the string, we just need to figure out what order those locations
-    #     # are in, in the sentence, which this logic does.
-    #     if dest_matcher(tokens)[0][2] > origin_matcher(tokens)[0][2]:
-    #         origin = locs[0]
-    #     else:
-    #         origin = locs[1]
-    # else:
-    #     origin = locs[0]
-        
-    return origin
+    return entities[0][1].lower()
 
 def get_dest(message):
     
@@ -407,22 +405,7 @@ def get_dest(message):
     match = dest_matcher(tokens)
     dest_temp = tokens[match[0][1]:match[0][2]+1]
     entities = [(X.label_, X.text) for X in dest_temp.ents]
-    dest = entities[0][1].lower()
-    # # get rid of anything not a date
-    # loc_ent = [x for x in entities if x[0]=='GPE']
-    # locs = [x[1].lower() for x in loc_ent]
-    
-    # if len(locs)>1:
-    #     # If there is more than one location in the string, we just need to figure out what order those locations
-    #     # are in, in the sentence, which this logic does.
-    #     if dest_matcher(tokens)[0][2] > origin_matcher(tokens)[0][2]:
-    #         dest = locs[1]
-    #     else:
-    #         dest = locs[0]
-    # else:
-    #     dest = locs[0]
-        
-    return dest
+    return entities[0][1].lower()
 
 def get_budget(message):
     no_punct = re.sub(r'[^\w\s$]','',message)
@@ -472,8 +455,8 @@ def get_flight(flight_info, codes):
         context = 'dest'
         result = f"I'm afraid there are no flights to {flight_info['dest_loc'].upper()} at this time. Their borders must still be closed. Please choose a different city."
     else:
-        result = 'Here are the 5 cheapest options for you!'
         try:
+            result = 'Here are the 5 cheapest options for you!\n'
             response = amadeus.shopping.flight_offers_search.get(
                 originLocationCode = iata_origin,
                 destinationLocationCode = iata_dest,
@@ -498,7 +481,7 @@ Flight Duration:       {offer['itineraries'][1]['duration'].strip('PT').lower()}
 Total Price:           ${offer['price']['total']}
 Flight Class:          {offer['travelerPricings'][0]['fareDetailsBySegment'][0]['cabin']}\n'''
 
-            result += 'Will any of these work for you? If so, please respond with "Option X". Otherwise, please say "Declined"'
+            result += '\nWill any of these work for you? If so, please respond with "Option X". Otherwise, please say "Declined"'
         except ResponseError:
             result = 'It seems there was an error in your booking, would you like to try something else?'
     return result
@@ -547,14 +530,14 @@ def Traveler(message):  # sourcery skip: inline-immediately-returned-variable, m
     if (
         (flight_info['depart_date'] != '') 
         and (flight_info['return_date'] != '')
-        and (revert_date(flight_info['return_date']) < revert_date(flight_info['depart_date']))
+        and (revert_date(flight_info['return_date'],today) <= revert_date(flight_info['depart_date'], today))
         ):
         return reversed_dates(flight_info)
-    elif (flight_info['depart_date'] != '') and (revert_date(flight_info['depart_date']) < today):
+    elif (flight_info['depart_date'] != '') and (revert_date(flight_info['depart_date'], today) <= today):
         flight_info['depart_date'] = ''
         context = 'depart'
         return "Oops! Looks like your departure date has already passed, you can't travel back in time! Please enter a new departure date"
-    elif (flight_info['return_date'] != '') and (revert_date(flight_info['return_date']) < today):
+    elif (flight_info['return_date'] != '') and (revert_date(flight_info['return_date'], today) <= today):
         flight_info['return_date'] = ''
         context = 'return'
         return "Oops! Looks like your return date has already passed, you can't travel back in time! Please enter a new return date"        
